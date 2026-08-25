@@ -12,7 +12,7 @@
       "name": "jira",
       "source": "./plugins/jira",
       "description": "JIRA ticket management. Triage, task creation, and smart routing.",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "author": {
         "name": "darven"
       },

@@ -1,0 +1,6 @@
+.env
+.env.local
+!.env.example
+
+# octo review runtime state
+.claude-octopus/

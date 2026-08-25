@@ -1,0 +1,133 @@
+# Jira plugin — user overlay example.
+#
+# Copy this to ~/.claude/custom/jira.yaml and fill it with your real IDs.
+# The plugin loads the overlay from that exact path and nowhere else.
+#
+# Every top-level key below is required. The bootstrap validator refuses to
+# run if any are missing.
+
+# -----------------------------------------------------------------------------
+# Self — information about the user running the plugin.
+# -----------------------------------------------------------------------------
+self:
+  email: "you@example.com"
+  jira_account_id: "712020:00000000-0000-0000-0000-000000000000"
+
+# -----------------------------------------------------------------------------
+# Projects — Jira projects the plugin interacts with. Each entry declares the
+# project's semantic `role` so commands can reference it abstractly (no
+# hardcoded project keys in the plugin).
+#
+# Allowed roles:
+#   - support: incoming tickets / ops triage (used by /jira:routine)
+#   - sprint:  technical task backlog (used by /jira:create)
+#   - roadmap: release-level epics (used for "implemented by" links)
+#   - other:   informational only
+# -----------------------------------------------------------------------------
+projects:
+  - key: "SUPPORT"
+    name: "Example Support Project"
+    role: "support"
+  - key: "ENG"
+    name: "Example Engineering Project"
+    role: "sprint"
+  - key: "ROADMAP"
+    name: "Example Roadmap Project"
+    role: "roadmap"
+
+# -----------------------------------------------------------------------------
+# Transitions — workflow transition IDs per project, looked up by semantic
+# action. Fetch IDs from GET /rest/api/3/issue/{key}/transitions.
+# -----------------------------------------------------------------------------
+transitions:
+  SUPPORT:
+    start_progress: 4         # Open -> In Progress
+    staging: 741              # In Progress -> Staging (QA)
+    resolve: 5                # -> Resolved
+    block: 781                # -> Blocked
+    mr_created: 711           # -> MR
+    stop_progress: 301        # In Progress -> Open
+
+# -----------------------------------------------------------------------------
+# Known accounts — used when assigning tickets by name instead of ID.
+# -----------------------------------------------------------------------------
+accounts:
+  - name: "Example User"
+    email: "example@example.com"
+    jira_account_id: "712020:00000000-0000-0000-0000-000000000000"
+
+# -----------------------------------------------------------------------------
+# Custom fields — Jira custom field IDs the plugin reads.
+# -----------------------------------------------------------------------------
+custom_fields:
+  story_points: "customfield_10016"
+
+# -----------------------------------------------------------------------------
+# Epics — common parent epics for /jira:create. The plugin will prompt you to
+# pick one of these (or type a different key) when creating a task.
+# -----------------------------------------------------------------------------
+epics:
+  - key: "ENG-1"
+    name: "Example Epic"
+
+# -----------------------------------------------------------------------------
+# Task creation — defaults for /jira:create.
+#
+# summary_format: template string with two placeholders: {space} and {title}.
+# common_spaces:  values the plugin offers for the `space` prompt.
+# -----------------------------------------------------------------------------
+task_creation:
+  default_project_role: "sprint"
+  default_issuetype: "Task"
+  summary_format: "[{space}] {title}"
+  common_spaces: ["Example Space 1", "Example Space 2"]
+
+# -----------------------------------------------------------------------------
+# Sprints — boards whose newly created issues must land in the ACTIVE sprint.
+#
+# Creating an issue does NOT put it in a sprint. The Sprint field is on the
+# create screen but is read-only there, so the issue has to be added afterwards
+# through the Agile API. Without this step the ticket lands in the backlog,
+# where the team never sees it.
+#
+# add_to_active_sprint_roles: project roles whose new issues get added to the
+#   board's active sprint. An empty list disables the step entirely.
+# boards: board ID per project key, so the plugin doesn't have to guess. Leave
+#   it as {} to discover via GET /rest/agile/1.0/board?projectKeyOrId=<KEY> —
+#   but fill it in for any project that has more than one scrum board (an old
+#   board and a live one is a common setup, and picking the wrong one puts the
+#   ticket in a sprint nobody looks at).
+# -----------------------------------------------------------------------------
+sprints:
+  add_to_active_sprint_roles: ["sprint"]
+  boards: {}
+
+# -----------------------------------------------------------------------------
+# Release links — Jira Polaris/Advanced Roadmaps link settings. Used when
+# /jira:create links a new task to a release in the roadmap project.
+# -----------------------------------------------------------------------------
+release_links:
+  link_type: "Polaris work item link"
+  release_project_role: "roadmap"
+
+# -----------------------------------------------------------------------------
+# Source-ticket links — link type used when a task references the support
+# ticket that triggered it.
+# -----------------------------------------------------------------------------
+source_ticket_link:
+  link_type: "Relates"
+
+# -----------------------------------------------------------------------------
+# Triage workflow — /jira:routine reads this.
+#
+# categories: the tags /jira:routine uses when classifying each ticket.
+# ssh_config_file / ssh_requires_vpn / host_pattern: optional hints for the
+#   routine's "investigate on server" step. Leave empty if you don't do that.
+# -----------------------------------------------------------------------------
+triage:
+  source_project_role: "support"
+  target_transition: "staging"
+  categories: ["bug", "product_task", "server_infra", "docs", "code_review"]
+  ssh_config_file: ""
+  ssh_requires_vpn: false
+  host_pattern: ""

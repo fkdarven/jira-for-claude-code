@@ -113,20 +113,35 @@ corresponding key exists. Optional is not the same as skippable in silence:
 step 2 asks for the release out loud, and a task created without one is
 reported as "no release" in step 7. A task nobody can trace to a release is a
 task the roadmap does not know about, and it is the first thing asked in
-refinement. Build each payload with `jq -n --arg` so
-values with quotes or control characters cannot break the JSON:
+refinement.
+
+**The new task is the subject of both links.** Jira reads a link as
+`inwardIssue` → *outward description* → `outwardIssue`: posting
+`inwardIssue: A, outwardIssue: B` on a type whose outward is "implements" means
+*A implements B*. The task implements the release and relates to the source
+ticket, never the other way round — so the task goes in `inwardIssue`, and the
+release or source ticket goes in `outwardIssue`.
+
+Reversed, the POST still answers 201. The link just reads "this task is
+implemented by the release" everywhere anyone looks, backwards from every other
+task already in that release. A symmetric type such as "Relates" hides the
+mistake completely, which is why this is worth getting right by rule instead of
+by eye.
+
+Build each payload with `jq -n --arg` so values with quotes or control
+characters cannot break the JSON:
 
 ```bash
 # Source-ticket link (skip entirely if no source key was provided).
 if [[ -n "$source_ticket_key" ]]; then
   link=$(jq -n \
-    --arg type    "$source_ticket_link_type" \
-    --arg source  "$source_ticket_key" \
-    --arg target  "$new_task_key" \
+    --arg type  "$source_ticket_link_type" \
+    --arg task  "$new_task_key" \
+    --arg other "$source_ticket_key" \
     '{
       type: { name: $type },
-      inwardIssue:  { key: $source },
-      outwardIssue: { key: $target }
+      inwardIssue:  { key: $task },
+      outwardIssue: { key: $other }
     }')
 
   curl --config "$JIRA_CURL_CONFIG" -X POST \
@@ -138,13 +153,13 @@ fi
 # Release link (same pattern): skip when $release_key is empty.
 if [[ -n "$release_key" ]]; then
   link=$(jq -n \
-    --arg type    "$release_link_type" \
-    --arg source  "$release_key" \
-    --arg target  "$new_task_key" \
+    --arg type  "$release_link_type" \
+    --arg task  "$new_task_key" \
+    --arg other "$release_key" \
     '{
       type: { name: $type },
-      inwardIssue:  { key: $source },
-      outwardIssue: { key: $target }
+      inwardIssue:  { key: $task },
+      outwardIssue: { key: $other }
     }')
 
   curl --config "$JIRA_CURL_CONFIG" -X POST \
@@ -153,6 +168,23 @@ if [[ -n "$release_key" ]]; then
     --data "$link"
 fi
 ```
+
+Read the links back from the task and check they say what the board will show.
+A 201 only means the link exists, not that it points the right way:
+
+```bash
+curl -s --config "$JIRA_CURL_CONFIG" \
+  "$JIRA_BASE_URL/rest/api/3/issue/$new_task_key?fields=issuelinks" \
+  | jq -r '.fields.issuelinks[]
+           | if .outwardIssue
+             then "\(.type.outward) \(.outwardIssue.key)"
+             else "\(.type.inward) \(.inwardIssue.key)" end'
+```
+
+Each line is the sentence the task's own page shows. `implements PUBLISHER-186`
+is right. `is implemented by PUBLISHER-186` means the payload went out reversed:
+delete it (`DELETE /rest/api/3/issueLink/{id}`, the id comes from the same
+`issuelinks` array) and post it again with the keys the correct way round.
 
 ### 6. Put the issue in the active sprint
 

@@ -105,6 +105,11 @@ sprints:
 # -----------------------------------------------------------------------------
 # Release links — Jira Polaris/Advanced Roadmaps link settings. Used when
 # /jira:create links a new task to a release in the roadmap project.
+#
+# link_type is read from the TASK's side: the task implements the release, so
+# what you want on the task's page is the type's `outward` wording. Check the
+# wording of every type on the instance with
+# GET /rest/api/3/issueLinkType — it lists inward and outward for each.
 # -----------------------------------------------------------------------------
 release_links:
   link_type: "Polaris work item link"

@@ -121,6 +121,36 @@ also carry the real relationship via `POST /rest/api/3/issueLink`, or the panel
 of linked items stays empty and only someone who reads the whole comment finds
 out the ticket produced anything.
 
+### Comments and descriptions: write markdown, convert with `lib/jira-adf.py`
+
+Nothing in this plugin hand-rolls ADF beyond a one-paragraph wrapper. A body is
+written to a file in the markdown subset the converter understands and turned
+into ADF by:
+
+```bash
+"$JIRA_PYTHON" "${CLAUDE_PLUGIN_ROOT}/lib/jira-adf.py" \
+  --base-url "$JIRA_BASE_URL" --projects "SUP,ENG" --wrap comment body.md   # {"body": doc}
+"$JIRA_PYTHON" "${CLAUDE_PLUGIN_ROOT}/lib/jira-adf.py" --wrap description body.md   # bare doc
+"$JIRA_PYTHON" "${CLAUDE_PLUGIN_ROOT}/lib/jira-adf.py" --projects "SUP,ENG" --keys body.md   # keys cited
+```
+
+Subset: paragraphs, `- ` bullets, `1. ` ordered lists, `#` headings, fenced code,
+`` `code` ``, `**bold**`, `[text](url)`, and panels `[[SUCCESS]] … [[/PANEL]]`
+(also INFO, NOTE, WARNING, ERROR). Every bare key of a `--projects` project
+becomes a link to `$JIRA_BASE_URL/browse/<KEY>` on its own; `[**KEY**](url)`
+composes bold with the link. The green `success` panel is where the
+customer-facing answer lives, opening with a bold "Resposta ao cliente"
+paragraph. `--keys` feeds the issue-link step: a key a comment cites is also
+linked for real.
+
+### Transitions come from the overlay, and the destination must be on the board
+
+The plugin applies two transition ids and no other: `start_progress` (when the
+ticket is still at Open) and `triage.target_transition`. Other ids in the overlay
+are documentation. Before moving, `/jira:comment` reads the board configuration
+(`GET /rest/agile/1.0/board/{id}/configuration`) and refuses a destination status
+that no column maps: such a ticket keeps its sprint but disappears from the board.
+
 ### Attachments and inline images
 
 Neither a file nor a picture in the body can ride along in

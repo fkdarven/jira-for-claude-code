@@ -14,6 +14,14 @@ maintain in your own dotfiles — none are baked in.
 | `/jira:auto <arg>`      | Router: fetch a ticket by key, list your open tickets, or dispatch to `routine` / `create`. |
 | `/jira:routine`         | Triage open tickets in your support project: classify, investigate, comment, transition. |
 | `/jira:create <arg>`    | Create a task in your sprint project, linked to a source ticket and a release. |
+| `/jira:comment <KEY> <body.md> [staging] [force]` | Post the single consolidated comment (markdown in, ADF out), link every key it cites, and optionally move the ticket through the overlay's target transition after checking the board has a column for it. |
+
+## Comments: markdown in, ADF out
+
+`lib/jira-adf.py` converts a markdown subset (paragraphs, bullets, code, bold,
+links, fenced code, `[[SUCCESS]] … [[/PANEL]]` panels) into ADF, turning bare
+issue keys of your projects into links. `/jira:comment` and `/jira:routine` use
+it; so should anything else that writes a body. Tests: `tests/test-jira-adf.sh`.
 
 ## Attachments and inline images
 

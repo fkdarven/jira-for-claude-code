@@ -85,16 +85,25 @@ runbook rather than guessing.
 
 #### c) Comment on the ticket via API
 
+Write the comment to a file and convert it with the plugin's converter; do not
+hand-roll ADF and do not write a throwaway script for it:
+
 ```bash
+body_json=$("$JIRA_PYTHON" "${CLAUDE_PLUGIN_ROOT}/lib/jira-adf.py" \
+  --base-url "$JIRA_BASE_URL" --projects "$project_keys" --wrap comment "$BODY_FILE")
+
 curl --config "$JIRA_CURL_CONFIG" -X POST \
   -H "Content-Type: application/json" \
   "$JIRA_BASE_URL/rest/api/3/issue/$KEY/comment" \
-  --data "$adf_body"
+  --data "$body_json"
 ```
 
-Body must be ADF. Include: what was done, root cause, commands executed
-(with secrets redacted), and any pending items. See `jira-context/SKILL.md` for
-the ADF wrapper and for the shape an issue key takes in a body.
+Include: what was done, root cause, commands executed (with secrets redacted),
+and any pending items. The part meant for the customer goes inside a
+`[[SUCCESS]] … [[/PANEL]]` block (green panel) that opens with a bold
+"Resposta ao cliente" paragraph, in customer language. `/jira:comment` wraps this
+step with the duplicate check and the issue-link step; prefer it when closing a
+single ticket. See `jira-context/SKILL.md` for the converter's input subset.
 
 Every key the comment mentions ships twice: as a link to
 `$JIRA_BASE_URL/browse/<KEY>` in the text, and as a real issue link on the
@@ -138,6 +147,12 @@ Note the `jq -n --arg` builder — never hand-roll the JSON payload, even
 when the only substituted value is an ID. If the overlay value ever
 contained a `"` (unlikely but possible), interpolation would break the
 body.
+
+These two ids are the only transitions the plugin applies. The overlay may list
+others (`block`, `mr_created`, `resolve`, …) for reference; a status the board
+does not map to a column keeps the ticket in the sprint but hides it from the
+board, which is what happened the one time an id was picked by hand. When a
+fix is merged but not yet deployed, leave the ticket where it is.
 
 ### 5. If the fix requires a product-code change
 

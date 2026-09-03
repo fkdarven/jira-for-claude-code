@@ -26,6 +26,8 @@ reference and the overlay-reading pattern.
 | Issue key matching `<KEY>-<N>` where `<KEY>` exists in `projects[]`    | Fetch the ticket via API, show summary (title, status, priority, **issuetype**, assignee, description), ask what to do |
 | `routine` or `triage`                                                  | `/jira:routine` |
 | `create ...`                                                           | `/jira:create` |
+| `<KEY> <file.md> ...`, or words like `comentar`, `comment`, `fechar`, `close`, `staging` with a key | `/jira:comment` — the only path that comments and moves a ticket |
+| `mover`, `move`, `transition`, `transicionar` with a key                | `/jira:comment` with the `staging` flag; never apply a transition id by hand |
 | (empty)                                                                | List your open tickets in the configured source project via JQL: `project = <support_key> AND assignee = currentUser() AND statusCategory != Done ORDER BY status ASC, priority DESC, created DESC` |
 | anything else                                                          | Interpret as intent; if ambiguous, ask one clarifying question |
 

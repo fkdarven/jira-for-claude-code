@@ -1,8 +1,10 @@
 {
   "name": "jira",
-  "version": "1.4.1",
-  "description": "JIRA ticket management. Triage, task creation, and smart routing.",
-  "author": { "name": "darven" },
+  "version": "1.5.0",
+  "description": "JIRA ticket management. Triage, task creation, consolidated comments with transitions, and smart routing.",
+  "author": {
+    "name": "darven"
+  },
   "license": "MIT",
   "skills": [
     "./skills/jira-context"
@@ -10,6 +12,7 @@
   "commands": [
     "./commands/auto.md",
     "./commands/routine.md",
-    "./commands/create.md"
+    "./commands/create.md",
+    "./commands/comment.md"
   ]
 }

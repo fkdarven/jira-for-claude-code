@@ -137,16 +137,25 @@ status=$(curl -s --config "$JIRA_CURL_CONFIG" "$JIRA_BASE_URL/rest/api/3/issue/$
 offered=$(curl -s --config "$JIRA_CURL_CONFIG" "$JIRA_BASE_URL/rest/api/3/issue/$KEY/transitions")
 ```
 
-Before moving, make sure the destination is visible on the board. A status the
-board does not map to a column keeps the ticket in the sprint but hides it from
-everyone looking at the board:
+First make sure the target transition is offered from where the ticket is now.
+Jira only lists the transitions that are valid from the current status, so an
+empty result means "already there, or someone moved it meanwhile" and the answer
+is to report the current status, not to try another id:
+
+```bash
+to_status=$(printf '%s' "$offered" | jq -r --arg id "$target_id" '.transitions[] | select(.id == $id) | .to.id')
+[[ -n "$to_status" ]] || { echo "transition $target_id ($target_name) is not offered from status '$status'; leaving the ticket as is"; exit 0; }
+```
+
+Then make sure the destination is visible on the board. A status the board does
+not map to a column keeps the ticket in the sprint but hides it from everyone
+looking at the board:
 
 ```bash
 if [[ -n "$board_id" ]]; then
-  to_status=$(printf '%s' "$offered" | jq -r --arg id "$target_id" '.transitions[] | select(.id == $id) | .to.id')
   mapped=$(curl -s --config "$JIRA_CURL_CONFIG" "$JIRA_BASE_URL/rest/agile/1.0/board/$board_id/configuration" \
     | jq -r '[.columnConfig.columns[].statuses[].id] | index($ARGS.positional[0]) != null' --args "$to_status")
-  [[ "$mapped" == "true" ]] || { echo "status of transition $target_id is not mapped on board $board_id; not moving"; exit 2; }
+  [[ "$mapped" == "true" ]] || { echo "status $to_status of transition $target_id is not mapped on board $board_id; not moving"; exit 2; }
 fi
 ```
 
@@ -163,10 +172,8 @@ curl --config "$JIRA_CURL_CONFIG" -X POST -H "Content-Type: application/json" \
   "$JIRA_BASE_URL/rest/api/3/issue/$KEY/transitions" --data "$(transition_payload "$target_id")"
 ```
 
-If the target transition is not in `$offered` from the current status (for
-example the ticket already sits at the target), say so and do not try another
-id. When the argument did not ask for a transition, the ticket stays where it
-is: a fix that is merged but not yet deployed stays In Progress.
+When the argument did not ask for a transition, the ticket stays where it is: a
+fix that is merged but not yet deployed stays In Progress.
 
 ### 6. Report
 

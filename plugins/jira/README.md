@@ -20,7 +20,8 @@ maintain in your own dotfiles — none are baked in.
 ## Comments: markdown in, ADF out
 
 `lib/jira-adf.py` converts a markdown subset (paragraphs, bullets, code, bold,
-links, fenced code, `[[SUCCESS]] … [[/PANEL]]` panels) into ADF, turning bare
+links, `@[Display Name](accountId)` mentions, fenced code, `[[SUCCESS]] … [[/PANEL]]`
+panels) into ADF, turning bare
 issue keys of your projects into links. `/jira:comment` and `/jira:routine` use
 it; so should anything else that writes a body. Tests: `tests/test-jira-adf.sh`.
 

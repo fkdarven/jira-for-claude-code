@@ -47,8 +47,11 @@ PANELS = {
 }
 PANEL_CLOSE = "[[/PANEL]]"
 
-TOKEN = re.compile(r"(`[^`]+`|\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*)")
+TOKEN = re.compile(r"(`[^`]+`|@\[[^\]]+\]\([^)]+\)|\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*)")
 LINK = re.compile(r"^\[([^\]]+)\]\(([^)]+)\)$")
+# @[Display Name](accountId) becomes an ADF mention node, which is what pings
+# the person in Jira. A plain "@Name" stays text and pings nobody.
+MENTION = re.compile(r"^@\[([^\]]+)\]\(([^)]+)\)$")
 HEADING = re.compile(r"^(#{1,6})\s+(.*\S)\s*$")
 ORDERED = re.compile(r"^\d+\.\s+")
 
@@ -90,8 +93,12 @@ def inline(text, keyre, base_url):
         if not part:
             continue
         link = LINK.match(part)
+        mention = MENTION.match(part)
         if part.startswith("`") and part.endswith("`"):
             out.append(text_node(part[1:-1], [{"type": "code"}]))
+        elif mention:
+            name, account_id = mention.group(1), mention.group(2)
+            out.append({"type": "mention", "attrs": {"id": account_id, "text": "@" + name}})
         elif link:
             label, href = link.group(1), link.group(2)
             marks = [{"type": "link", "attrs": {"href": href}}]

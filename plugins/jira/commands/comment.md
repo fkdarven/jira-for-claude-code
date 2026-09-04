@@ -16,16 +16,23 @@ If the bootstrap fails, surface its error verbatim and stop.
 
 `$ARGUMENTS`
 
-Shape: `<KEY> <path-to-body.md> [staging|close|done] [force]`
+Shape: `<KEY> <path-to-body.md> [staging|close|done|resolve] [force]`
 
 - `<KEY>`: an issue in one of the overlay's `projects[]`.
 - `<path-to-body.md>`: the comment, written in the markdown subset `lib/jira-adf.py`
   understands (paragraphs, `- ` bullets, `` `code` ``, `**bold**`, `[text](url)`,
+  `@[Display Name](accountId)` for a mention that actually pings the person,
   fenced code, and `[[SUCCESS]] … [[/PANEL]]` for the client-facing panel). Write
   the body to a file first; never inline it in the command line.
 - `staging` / `close` / `done`: after commenting, apply the overlay's
   `triage.target_transition` (with `start_progress` first when the ticket is still
-  at Open). No other transition is ever applied by this command.
+  at Open).
+- `resolve`: after commenting, apply the overlay's `transitions.<PROJECT>.resolve`
+  (with `start_progress` first when the ticket is still at Open). Only when the
+  user said, in this conversation, to resolve this ticket: the default end of a
+  ticket is the staging transition, and a fix that is merged but not deployed
+  never goes to Resolved. Never infer it from the body of the comment.
+- No other transition is ever applied by this command.
 - `force`: post even if a comment with the same opening paragraph already exists.
 
 ## Why this command exists
@@ -57,12 +64,16 @@ print(yaml.safe_load(sys.stdin).get("source_ticket_link", {}).get("link_type", "
 `KEY`'s project must be in `$project_keys`; otherwise abort ("project not
 declared in the overlay") — the plugin never writes to a project it does not know.
 
-For the transition (only when the argument asks for it), resolve as
-`/jira:routine` does:
+For the transition (only when the argument asks for it; `TRANSITION_ARG` is the
+third word of the argument, empty when absent), resolve as `/jira:routine` does:
 
 ```bash
 project=${KEY%%-*}
 target_name=$(read_overlay 'import sys, yaml; print(yaml.safe_load(sys.stdin).get("triage", {}).get("target_transition", ""))')
+# When the argument was `resolve`, the target is the overlay's resolve
+# transition instead; everything after this line (offered check, board mapping,
+# start_progress first) is the same.
+[[ "$TRANSITION_ARG" == "resolve" ]] && target_name="resolve"
 target_id=$(read_overlay "import sys, yaml; print((yaml.safe_load(sys.stdin).get('transitions', {}).get('$project') or {}).get('$target_name', ''))")
 start_id=$(read_overlay "import sys, yaml; print((yaml.safe_load(sys.stdin).get('transitions', {}).get('$project') or {}).get('start_progress', ''))")
 board_id=$(read_overlay "import sys, yaml; print(((yaml.safe_load(sys.stdin).get('sprints', {}) or {}).get('boards') or {}).get('$project', ''))")

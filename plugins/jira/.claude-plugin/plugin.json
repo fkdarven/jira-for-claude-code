@@ -1,6 +1,6 @@
 {
   "name": "jira",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "JIRA ticket management. Triage, task creation, roadmap items, consolidated comments with transitions, and smart routing.",
   "author": {
     "name": "darven"

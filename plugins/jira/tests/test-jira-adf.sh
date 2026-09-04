@@ -44,6 +44,8 @@ Texto para o cliente.
 [[/PANEL]]
 
 Parágrafo depois do painel.
+
+Oi @[Ana Silva](5cae6f41a8d493261b3c04a5), olha isso. @Beltrano fica texto.
 MD
 
 check() {
@@ -71,7 +73,9 @@ check "ordered list" "d['body']['content'][2]['type'] == 'orderedList' and len(d
 check "heading level 2" "d['body']['content'][3]['type'] == 'heading' and d['body']['content'][3]['attrs']['level'] == 2" "$json"
 check "code block keeps blank line and language" "d['body']['content'][4]['type'] == 'codeBlock' and d['body']['content'][4]['attrs']['language'] == 'bash' and '\n\n' in d['body']['content'][4]['content'][0]['text']" "$json"
 check "success panel with 2 paragraphs" "d['body']['content'][5]['type'] == 'panel' and d['body']['content'][5]['attrs']['panelType'] == 'success' and len(d['body']['content'][5]['content']) == 2" "$json"
-check "paragraph after panel is outside it" "d['body']['content'][6]['type'] == 'paragraph' and len(d['body']['content']) == 7" "$json"
+check "paragraph after panel is outside it" "d['body']['content'][6]['type'] == 'paragraph' and len(d['body']['content']) == 8" "$json"
+check "@[Name](id) becomes a mention node" "any(n.get('type') == 'mention' and n['attrs']['id'] == '5cae6f41a8d493261b3c04a5' and n['attrs']['text'] == '@Ana Silva' for n in d['body']['content'][7]['content'])" "$json"
+check "plain @Name stays text" "any(n.get('type') == 'text' and '@Beltrano' in n['text'] for n in d['body']['content'][7]['content'])" "$json"
 
 desc=$("$py" "$converter" --wrap description "$fixture")
 check "wrap description is the bare doc" "d['type'] == 'doc'" "$desc"

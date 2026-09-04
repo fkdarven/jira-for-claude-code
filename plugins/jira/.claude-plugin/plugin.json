@@ -1,7 +1,7 @@
 {
   "name": "jira",
-  "version": "1.5.0",
-  "description": "JIRA ticket management. Triage, task creation, consolidated comments with transitions, and smart routing.",
+  "version": "1.6.0",
+  "description": "JIRA ticket management. Triage, task creation, roadmap items, consolidated comments with transitions, and smart routing.",
   "author": {
     "name": "darven"
   },
@@ -13,6 +13,7 @@
     "./commands/auto.md",
     "./commands/routine.md",
     "./commands/create.md",
-    "./commands/comment.md"
+    "./commands/comment.md",
+    "./commands/roadmap.md"
   ]
 }

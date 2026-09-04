@@ -28,7 +28,16 @@ die() {
   exit 2
 }
 
-: "${CLAUDE_PLUGIN_ROOT:?CLAUDE_PLUGIN_ROOT is not set — invoke this via a plugin skill/command.}"
+# The harness substitutes ${CLAUDE_PLUGIN_ROOT} inside the command text, but
+# it does not export the variable to the shell that runs the command. So when
+# it is missing, derive the plugin root from this file's own location
+# (lib/bootstrap.sh lives one level below the plugin root) and export it for
+# the rest of the command (jira-adf.py, jira-media.sh, .env lookups).
+if [[ -z "${CLAUDE_PLUGIN_ROOT:-}" ]]; then
+  CLAUDE_PLUGIN_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd) \
+    || die "could not derive CLAUDE_PLUGIN_ROOT from ${BASH_SOURCE[0]}"
+  export CLAUDE_PLUGIN_ROOT
+fi
 
 plugin_root="$CLAUDE_PLUGIN_ROOT"
 plugin_name="jira"
@@ -130,6 +139,14 @@ USER_DEFINED_CONTAINERS = {
     "transitions",   # keys are project codes, user-specific
 }
 
+# Blocks the example documents but the plugin works without, because every
+# value in them has a default in the command that reads it. Without this,
+# documenting a new optional block in the example would refuse to start for
+# every overlay written before it.
+OPTIONAL_BLOCKS = {
+    "roadmap",       # /jira:roadmap defaults to role "roadmap" + issuetype "Story"
+}
+
 try:
     with open(example_path, encoding="utf-8") as f:
         example = yaml.safe_load(f) or {}
@@ -154,6 +171,8 @@ def missing_keys(ex, ov, path=""):
         for k, v in ex.items():
             child_path = f"{path}.{k}" if path else k
             if k not in ov:
+                if child_path in OPTIONAL_BLOCKS:
+                    continue
                 problems.append(child_path)
             else:
                 problems.extend(missing_keys(v, ov[k], child_path))

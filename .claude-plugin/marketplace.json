@@ -11,8 +11,8 @@
     {
       "name": "jira",
       "source": "./plugins/jira",
-      "description": "JIRA ticket management. Triage, task creation, consolidated comments with transitions, and smart routing.",
-      "version": "1.5.0",
+      "description": "JIRA ticket management. Triage, task creation, roadmap items, consolidated comments with transitions, and smart routing.",
+      "version": "1.6.0",
       "author": {
         "name": "darven"
       },

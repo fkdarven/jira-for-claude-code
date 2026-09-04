@@ -83,6 +83,23 @@ task_creation:
   common_spaces: ["Example Space 1", "Example Space 2"]
 
 # -----------------------------------------------------------------------------
+# Roadmap — where /jira:roadmap creates items.
+#
+# A roadmap item is a child of a VERSION EPIC: an epic whose summary is the
+# release number ("3.10.0"), with the initiatives of that release hanging off
+# it. The command resolves the epic by matching the version you type against
+# those summaries, and never creates one that does not exist.
+#
+# default_project_role: the projects[] role that holds the roadmap — the same
+#   role release_links points at, since a release and a roadmap item live in
+#   the same project.
+# default_issuetype:    what a roadmap item is created as.
+# -----------------------------------------------------------------------------
+roadmap:
+  default_project_role: "roadmap"
+  default_issuetype: "Story"
+
+# -----------------------------------------------------------------------------
 # Sprints — boards whose newly created issues must land in the ACTIVE sprint.
 #
 # Creating an issue does NOT put it in a sprint. The Sprint field is on the

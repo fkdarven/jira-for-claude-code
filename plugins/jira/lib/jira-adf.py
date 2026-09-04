@@ -20,6 +20,10 @@ Supported input (the subset a ticket comment needs, nothing more):
                           panel; the opening marker starts a block and the panel absorbs
                           every following block until [[/PANEL]]. Kinds: SUCCESS (green,
                           the client-facing answer), INFO, NOTE, WARNING, ERROR.
+                          BOTH markers start a block, so [[/PANEL]] needs a blank line
+                          before it. Glued to the previous paragraph it is read as panel
+                          content: the panel never closes, everything after is swallowed
+                          into it, and the marker shows up as text. No error is raised.
 
 --wrap comment  prints {"body": <doc>}     (POST /rest/api/3/issue/{key}/comment)
 --wrap description prints <doc>            (fields.description in create/update)

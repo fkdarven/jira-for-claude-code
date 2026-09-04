@@ -15,6 +15,7 @@ maintain in your own dotfiles — none are baked in.
 | `/jira:routine`         | Triage open tickets in your support project: classify, investigate, comment, transition. |
 | `/jira:create <arg>`    | Create a task in your sprint project, linked to a source ticket and a release. |
 | `/jira:comment <KEY> <body.md> [staging] [force]` | Post the single consolidated comment (markdown in, ADF out), link every key it cites, and optionally move the ticket through the overlay's target transition after checking the board has a column for it. |
+| `/jira:roadmap <version> <summary> [body.md]` | Create a roadmap item under the version epic in your roadmap project. No sprint, no transition, no release link; the epic already says which release it belongs to. Run it bare to list the version epics that exist. |
 
 ## Comments: markdown in, ADF out
 

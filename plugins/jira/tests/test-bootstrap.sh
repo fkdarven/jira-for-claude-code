@@ -214,6 +214,28 @@ else
 fi
 rm -rf "$root" "$home"
 
+# Case 9 — CLAUDE_PLUGIN_ROOT unset: the harness substitutes the variable in
+# the command text but does not export it, so bootstrap must derive the root
+# from its own path and export it.
+root=$(make_plugin_root)
+home=$(make_home_with_overlay)
+total=$((total + 1))
+got=$(
+  HOME="$home" env -u CLAUDE_PLUGIN_ROOT bash -c '
+    source "$1/lib/bootstrap.sh"
+    printf "%s" "$CLAUDE_PLUGIN_ROOT"
+    rm -f "$JIRA_CURL_CONFIG"
+  ' _ "$root" 2>/dev/null
+)
+if [[ "$got" == "$root" ]]; then
+  printf "  PASS  bootstrap derives CLAUDE_PLUGIN_ROOT from its own path when unset\n"
+else
+  failures=$((failures + 1))
+  printf "  FAIL  bootstrap derives CLAUDE_PLUGIN_ROOT from its own path when unset\n"
+  printf "        expected %s, got: %s\n" "$root" "$got"
+fi
+rm -rf "$root" "$home"
+
 echo
 if (( failures > 0 )); then
   printf "FAILED: %d / %d\n" "$failures" "$total"

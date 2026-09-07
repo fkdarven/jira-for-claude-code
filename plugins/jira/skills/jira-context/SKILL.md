@@ -220,20 +220,17 @@ curl -s --config "$JIRA_CURL_CONFIG" "$JIRA_BASE_URL/rest/api/3/issue/$KEY?field
 
 To undo an inverted link: `DELETE /rest/api/3/issueLink/{id}`, then post it swapped.
 
-### A version on a ticket may be the portal, and it goes in `fixVersions`
+### Fields that are not on the create screen answer 400
 
-On a support project a "version" can name the portal rather than a release. When it
-does, the field that carries it is `fixVersions`, never `versions`: the create screen
-for a Task does not include `versions`, so sending it answers 400 ("cannot be set, it
-is not on the appropriate screen"). Check with
-`GET /rest/api/3/issue/createmeta/<PROJECT>/issuetypes/<id>` before assuming a field
-exists.
+Before sending a field on creation, confirm it exists on the create screen with
+`GET /rest/api/3/issue/createmeta/<PROJECT>/issuetypes/<id>`. A field that is valid on
+the issue but absent from that screen answers 400 ("cannot be set, it is not on the
+appropriate screen"). `versions` and `fixVersions` are the usual pair to get wrong,
+because both are valid on the issue and typically only one is on the screen.
 
-Two consequences. A service account that can only write on creation must send
-everything in the POST, sprint and portal included, because "create then edit" breaks
-when `GET /issue/KEY` answers 404 for it. And matching an inventory name to a version
-name needs case, accent and separator normalised; substring matching is a trap, since
-it pairs an unrelated slug with a portal whose name is a prefix of it.
+This matters most for a service account that can only write on creation: when
+`GET /issue/KEY` answers 404 for it, "create then edit" breaks, so everything the
+ticket needs has to travel in the POST.
 
 ### Attachments and inline images
 

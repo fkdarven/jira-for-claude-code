@@ -115,6 +115,13 @@ clickable:
 
 Build the `href` from `$JIRA_BASE_URL` — never from a hardcoded host.
 
+Never guess the base URL either, not even for a link written by hand in a report.
+A short slug that looks like the obvious tenant can belong to somebody else: for one
+site, `<slug>.atlassian.net` is a live Cloud instance of an unrelated company, while
+theirs is `<slug>-<product>.atlassian.net`. Pointing an authenticated call at the wrong
+tenant hands that company a working Basic header with the user's API token. The value
+in `.env` is the only source.
+
 For a key that stands on its own line, `inlineCard` is the richer form: Jira
 resolves it into a smart card carrying summary, status and assignee.
 

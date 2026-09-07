@@ -151,6 +151,14 @@ into ADF by:
 "$JIRA_PYTHON" "${CLAUDE_PLUGIN_ROOT}/lib/jira-adf.py" --projects "SUP,ENG" --keys body.md   # keys cited
 ```
 
+Both panel markers start a block, so `[[/PANEL]]` needs a blank line before it, the
+same as the opening marker. Without it the closer is read as panel content: the panel
+never closes, every following block is swallowed by it, and `[[/PANEL]]` shows up as
+text. It raises no error, because the document is valid, just entirely inside the
+panel. Validate the ADF before the POST or PUT rather than after: counting the top
+level nodes and checking the type of the first costs one line and catches this before
+it reaches the ticket.
+
 Subset: paragraphs, `- ` bullets, `1. ` ordered lists, `#` headings, fenced code,
 `` `code` ``, `**bold**`, `[text](url)`, and panels `[[SUCCESS]] … [[/PANEL]]`
 (also INFO, NOTE, WARNING, ERROR). Every bare key of a `--projects` project
@@ -192,6 +200,40 @@ ticket is still at Open) and `triage.target_transition`. Other ids in the overla
 are documentation. Before moving, `/jira:comment` reads the board configuration
 (`GET /rest/agile/1.0/board/{id}/configuration`) and refuses a destination status
 that no column maps: such a ticket keeps its sprint but disappears from the board.
+
+### Link direction: the inwardIssue is the subject of the sentence
+
+Jira applies the type's `outward` description **from the `inwardIssue` to the
+`outwardIssue`**. Posting `inwardIssue: A, outwardIssue: B` on a type whose `outward`
+is "implements" reads *A implements B*. So when a task implements a release, the task
+is the `inwardIssue` and the release is the `outwardIssue`, which renders "implements
+RELEASE-KEY" on the task's page.
+
+The POST answers 201 either way, and a symmetric type such as "Relates" hides the
+mistake entirely. The only check that separates a correct link from an inverted one is
+reading it back from the task's side:
+
+```bash
+curl -s --config "$JIRA_CURL_CONFIG" "$JIRA_BASE_URL/rest/api/3/issue/$KEY?fields=issuelinks" \
+  | jq -r '.fields.issuelinks[] | if .outwardIssue then "\(.type.outward) \(.outwardIssue.key)" else "\(.type.inward) \(.inwardIssue.key)" end'
+```
+
+To undo an inverted link: `DELETE /rest/api/3/issueLink/{id}`, then post it swapped.
+
+### A version on a ticket may be the portal, and it goes in `fixVersions`
+
+On a support project a "version" can name the portal rather than a release. When it
+does, the field that carries it is `fixVersions`, never `versions`: the create screen
+for a Task does not include `versions`, so sending it answers 400 ("cannot be set, it
+is not on the appropriate screen"). Check with
+`GET /rest/api/3/issue/createmeta/<PROJECT>/issuetypes/<id>` before assuming a field
+exists.
+
+Two consequences. A service account that can only write on creation must send
+everything in the POST, sprint and portal included, because "create then edit" breaks
+when `GET /issue/KEY` answers 404 for it. And matching an inventory name to a version
+name needs case, accent and separator normalised; substring matching is a trap, since
+it pairs an unrelated slug with a portal whose name is a prefix of it.
 
 ### Attachments and inline images
 

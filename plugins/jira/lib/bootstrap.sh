@@ -2,7 +2,7 @@
 # Jira plugin bootstrap.
 #
 # Loads and validates the two inputs the plugin requires:
-#   1. ${CLAUDE_PLUGIN_ROOT}/.env       — API credentials (secrets).
+#   1. ~/.claude/custom/jira.env (or ${CLAUDE_PLUGIN_ROOT}/.env) — API credentials.
 #   2. ~/.claude/custom/jira.yaml       — user overlay with project/workflow IDs.
 #
 # Skills/commands source this at the top:
@@ -41,7 +41,11 @@ fi
 
 plugin_root="$CLAUDE_PLUGIN_ROOT"
 plugin_name="jira"
-env_file="$plugin_root/.env"
+# Secrets live outside the versioned cache so a version bump never orphans them:
+# ~/.claude/custom/jira.env first, the plugin root .env as the legacy fallback.
+env_file="${HOME}/.claude/custom/${plugin_name}.env"
+[[ -f "$env_file" ]] || env_file="$plugin_root/.env"
+rules_file="${HOME}/.claude/custom/${plugin_name}.rules.md"
 env_example="$plugin_root/.env.example"
 overlay_file="${HOME}/.claude/custom/${plugin_name}.yaml"
 overlay_example="$plugin_root/config.example.yaml"
@@ -64,7 +68,7 @@ if [[ -z "$PY_WITH_YAML" ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# 2. .env must exist at the plugin root. No fallback locations.
+# 2. The secrets file must exist (custom path first, plugin root as fallback).
 # ---------------------------------------------------------------------------
 if [[ ! -f "$env_file" ]]; then
   die "missing secrets file: $env_file
@@ -72,6 +76,8 @@ if [[ ! -f "$env_file" ]]; then
     cp '$env_example' '$env_file'
   Then fill in the required values."
 fi
+# House rules (team policy on top of the mechanics) are optional and live with the overlay.
+if [[ -f "$rules_file" ]]; then export JIRA_RULES_FILE="$rules_file"; fi
 
 # ---------------------------------------------------------------------------
 # 3. Required vars = lines in .env.example with an empty value. Lines of the

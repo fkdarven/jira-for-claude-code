@@ -27,6 +27,16 @@ After it returns successfully, the following variables are in scope:
 Never hardcode a project key, transition ID, account ID, custom field ID,
 or link type in a command. Read it from the overlay.
 
+## House rules live next to the overlay
+
+Team policy that sits on top of the mechanics (which status a ticket ends in, how the
+customer-facing answer is split, who owns a derived issue) is not versioned with the
+plugin. It lives in `~/.claude/custom/jira.rules.md`; when that file exists the
+bootstrap exports its path as `JIRA_RULES_FILE`. Read it right after the bootstrap,
+before any comment, link or transition, and follow it over any default described here.
+Secrets follow the same idea: `~/.claude/custom/jira.env` is read first, so a version
+bump never needs the `.env` copied into the new cache directory.
+
 ## Reading the overlay
 
 Pipe the overlay file into Python via stdin — no path interpolation, no

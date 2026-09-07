@@ -143,6 +143,31 @@ customer-facing answer lives, opening with a bold "Resposta ao cliente"
 paragraph. `--keys` feeds the issue-link step: a key a comment cites is also
 linked for real.
 
+### A relay bot in the panel: two comments, mention on the first line
+
+A team can put a bot on the ticket that forwards the customer-facing part onward,
+relaying everything below its own mention in the comment and nothing above it. Where
+that is in play, the answer to the customer is a comment of its own holding only the
+green panel, with the bot mention `@[Display Name](accountId)` as the first thing
+inside the panel, alone on its first line, and no label paragraph, which the bot would
+relay too. The technical part (cause, fix) is a separate comment, posted first, with no
+mention at all. So `/jira:comment` runs twice, and the duplicate check does not protect
+a panel-only body: look at the ticket before the second post.
+
+Which label triggers this, and which account the bot is, are policy. They live in the
+rules file, not here.
+
+### Consolidating: one comment survives, the others are saved and then deleted
+
+Commenting in steps while an investigation runs is fine. When it ends, the ticket keeps
+one consolidated comment, opening by saying it replaces the earlier ones and where the
+history lives. Edit a posted comment with `PUT /rest/api/3/issue/{key}/comment/{id}`
+(same shape as the POST). Delete with `DELETE /rest/api/3/issue/{key}/comment/{id}`;
+there is no undo, so save every original body to a file first and post the consolidated
+comment before deleting the old ones. Keep the corrected result, drop the narrative of
+how the correction happened. A closure without a task is one line; never argue the
+decision inside the ticket.
+
 ### Transitions come from the overlay, and the destination must be on the board
 
 The plugin applies two transition ids and no other: `start_progress` (when the

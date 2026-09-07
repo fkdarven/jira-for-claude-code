@@ -32,6 +32,10 @@ Shape: `<KEY> <path-to-body.md> [staging|close|done|resolve] [force]`
   user said, in this conversation, to resolve this ticket: the default end of a
   ticket is the staging transition, and a fix that is merged but not deployed
   never goes to Resolved. Never infer it from the body of the comment.
+- When the rules file puts a relay bot on the ticket, run the command twice: first the
+  technical body, then a body that is only the `[[SUCCESS]]` panel, with the bot mention
+  alone on its first line and no label paragraph (see the skill). The duplicate check
+  does not cover a panel-only body.
 - No other transition is ever applied by this command.
 - `force`: post even if a comment with the same opening paragraph already exists.
 

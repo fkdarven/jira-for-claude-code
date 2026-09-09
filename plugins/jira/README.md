@@ -14,7 +14,7 @@ maintain in your own dotfiles — none are baked in.
 | `/jira:auto <arg>`      | Router: fetch a ticket by key, list your open tickets, or dispatch to `routine` / `create`. |
 | `/jira:routine`         | Triage open tickets in your support project: classify, investigate, comment, transition. |
 | `/jira:create <arg>`    | Create a task in your sprint project, linked to a source ticket and a release. |
-| `/jira:comment <KEY> <body.md> [staging] [force]` | Post the single consolidated comment (markdown in, ADF out), link every key it cites, and optionally move the ticket through the overlay's target transition after checking the board has a column for it. |
+| `/jira:comment <KEY> <body.md> [staging] [force]` | Post a consolidated comment (markdown in, ADF out), link every key it cites, and optionally move the ticket through the overlay's target transition after checking the board has a column for it. |
 | `/jira:roadmap <version> <summary> [body.md]` | Create a roadmap item under the version epic in your roadmap project. No sprint, no transition, no release link; the epic already says which release it belongs to. Run it bare to list the version epics that exist. |
 
 ## Comments: markdown in, ADF out
@@ -57,9 +57,14 @@ directory, so a version bump never leaves them behind.
 
 ### 1. Secrets (`~/.claude/custom/jira.env`)
 
+`${CLAUDE_PLUGIN_ROOT}` is substituted inside a command's text but is not
+exported to your shell, so resolve the installed plugin directory once:
+
 ```bash
+plugin_dir=$(ls -d ~/.claude/plugins/cache/jira-for-claude-code/jira/* | sort -V | tail -1)
+
 mkdir -p ~/.claude/custom
-cp "${CLAUDE_PLUGIN_ROOT}/.env.example" ~/.claude/custom/jira.env
+cp "$plugin_dir/.env.example" ~/.claude/custom/jira.env
 chmod 600 ~/.claude/custom/jira.env
 # Open the file and fill in the required values.
 ```
@@ -79,8 +84,7 @@ Required variables:
 ### 2. User overlay (`~/.claude/custom/jira.yaml`)
 
 ```bash
-mkdir -p ~/.claude/custom
-cp "${CLAUDE_PLUGIN_ROOT}/config.example.yaml" ~/.claude/custom/jira.yaml
+cp "$plugin_dir/config.example.yaml" ~/.claude/custom/jira.yaml
 # Fill it with your real Jira IDs.
 ```
 
@@ -136,11 +140,13 @@ aborts and names the paths it looked at.
 
 ## Tests
 
+From this directory:
+
 ```bash
-bash plugins/jira/tests/test-bootstrap.sh
-bash plugins/jira/tests/test-jira-media.sh
+for f in tests/test-*.sh; do bash "$f"; done
 ```
 
-Both are offline: no token, no network. `test-jira-media.sh` stubs `curl` with
-a recorded 303 so the redirect parsing — and the guard against echoing the
-signed media token — stay covered.
+All three are offline: no token, no network. `test-jira-media.sh` stubs `curl`
+with a recorded 303 so the redirect parsing, and the guard against echoing the
+signed media token, stay covered. `test-bootstrap.sh` covers the order the
+secrets file is looked up in and the `JIRA_RULES_FILE` export.

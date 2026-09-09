@@ -19,10 +19,10 @@ done
 
 fixture=$(mktemp)
 cat > "$fixture" <<'MD'
-**Causa:** o `DELETE` na wp_options não alcança o Redis. Precedente ENG-4809, veja
-[**SUP-1941**](https://example.atlassian.net/browse/SUP-1941) e [MR !29](https://git.example/mr/29).
+**Causa:** o `DELETE` não invalidou o cache depois da escrita. Precedente ENG-11, veja
+[**SUP-22**](https://example.atlassian.net/browse/SUP-22) e [MR !29](https://git.example/mr/29).
 
-- item um com ENG-5056
+- item um com ENG-33
 - item dois
 
 1. primeiro
@@ -64,8 +64,8 @@ json=$("$py" "$converter" --base-url https://example.atlassian.net/ --projects S
 check "wrap comment has body.doc" "d['body']['type'] == 'doc' and d['body']['version'] == 1" "$json"
 check "first paragraph starts with strong Causa:" "d['body']['content'][0]['type'] == 'paragraph' and d['body']['content'][0]['content'][0]['marks'][0]['type'] == 'strong'" "$json"
 check "code mark on DELETE" "any(n.get('marks',[{}])[0].get('type') == 'code' and n['text'] == 'DELETE' for n in d['body']['content'][0]['content'])" "$json"
-check "bare ENG-4809 becomes a link" "any(n['text'] == 'ENG-4809' and any(m['type']=='link' and m['attrs']['href'].endswith('/browse/ENG-4809') for m in n.get('marks',[])) for n in d['body']['content'][0]['content'])" "$json"
-check "[**SUP-1941**](url) keeps bold and link" "any(n['text'] == 'SUP-1941' and {m['type'] for m in n.get('marks',[])} == {'link','strong'} for n in d['body']['content'][0]['content'])" "$json"
+check "bare ENG-11 becomes a link" "any(n['text'] == 'ENG-11' and any(m['type']=='link' and m['attrs']['href'].endswith('/browse/ENG-11') for m in n.get('marks',[])) for n in d['body']['content'][0]['content'])" "$json"
+check "[**SUP-22**](url) keeps bold and link" "any(n['text'] == 'SUP-22' and {m['type'] for m in n.get('marks',[])} == {'link','strong'} for n in d['body']['content'][0]['content'])" "$json"
 check "markdown link MR !29" "any(n['text'] == 'MR !29' and n['marks'][0]['attrs']['href'] == 'https://git.example/mr/29' for n in d['body']['content'][0]['content'])" "$json"
 check "bullet list with 2 items" "d['body']['content'][1]['type'] == 'bulletList' and len(d['body']['content'][1]['content']) == 2" "$json"
 check "key inside bullet is linked" "any(m['type']=='link' for n in d['body']['content'][1]['content'][0]['content'][0]['content'] for m in n.get('marks',[]))" "$json"
@@ -82,7 +82,7 @@ check "wrap description is the bare doc" "d['type'] == 'doc'" "$desc"
 
 keys=$("$py" "$converter" --projects SUP,ENG --keys "$fixture" | tr '\n' ' ')
 total=$((total + 1))
-if [[ "$keys" == "ENG-4809 SUP-1941 ENG-5056 " ]]; then echo "ok   - --keys lists distinct keys in order"; else echo "FAIL - --keys gave: $keys"; failures=$((failures + 1)); fi
+if [[ "$keys" == "ENG-11 SUP-22 ENG-33 " ]]; then echo "ok   - --keys lists distinct keys in order"; else echo "FAIL - --keys gave: $keys"; failures=$((failures + 1)); fi
 
 marker=$("$py" "$converter" --marker "$fixture")
 total=$((total + 1))

@@ -191,8 +191,8 @@ curl --config "$JIRA_CURL_CONFIG" -X POST -H "Content-Type: application/json" \
   "$JIRA_BASE_URL/rest/api/3/issue/$KEY/transitions" --data "$(transition_payload "$target_id")"
 ```
 
-When the argument did not ask for a transition, the ticket stays where it is: a
-fix that is merged but not yet deployed stays In Progress.
+When the argument did not ask for a transition, the ticket stays where it is.
+Which situations should not ask for one is policy, and comes from the rules file.
 
 ### 6. Report
 

@@ -108,9 +108,11 @@ The example file documents every required key. The critical ones:
 Team policy that sits on top of the mechanics, which status a ticket ends in,
 how a customer-facing answer is split, who owns a derived issue, does not
 belong in a versioned plugin. Write it in that file and the bootstrap exports
-the path as `JIRA_RULES_FILE`; the `jira-context` skill reads it right after
-the bootstrap and follows it over any default the skill documents. When the
-file is absent, `JIRA_RULES_FILE` is unset and the documented defaults apply.
+the path as `JIRA_RULES_FILE`; every command reads it right after the
+bootstrap, and follows it over anything the command or the skill describes.
+When the file is absent, `JIRA_RULES_FILE` is unset and the plugin is left with
+the mechanics alone: those decisions go back to being yours, in the
+conversation, because the plugin states no default for them.
 
 ### 4. Verify
 

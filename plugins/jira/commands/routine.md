@@ -151,11 +151,12 @@ when the only substituted value is an ID. If the overlay value ever
 contained a `"` (unlikely but possible), interpolation would break the
 body.
 
-These two ids are the only transitions the plugin applies. The overlay may list
-others (`block`, `mr_created`, `resolve`, …) for reference; a status the board
-does not map to a column keeps the ticket in the sprint but hides it from the
-board, which is what happened the one time an id was picked by hand. When a
-fix is merged but not yet deployed, leave the ticket where it is.
+These two ids are the only transitions this command applies (`/jira:comment`
+adds `resolve`, on explicit request). The overlay may list others (`block`,
+`mr_created`, …) for reference; a status the board does not map to a column
+keeps the ticket in the sprint but hides it from the board, which is what
+happened the one time an id was picked by hand. Which situations should leave
+the ticket where it is comes from the rules file.
 
 ### 5. If the fix requires a product-code change
 

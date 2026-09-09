@@ -1,7 +1,8 @@
 # Changelog
 
-Versions before 1.7.1 are documented by their annotated git tags
-(`git tag -n20 -l 'jira--v*'`).
+This file starts at 1.7.1. Earlier versions have no changelog entry: their
+history is in the commits, and each release carries an annotated tag whose
+message is a single subject line (`git tag -n1 -l 'jira--v*' -l 'v1.4.1'`).
 
 ## [1.7.2] - 2026-09-09
 
@@ -23,6 +24,10 @@ Versions before 1.7.1 are documented by their annotated git tags
   `config.example.yaml`.
 - `/jira:auto` states that its keyword lists are examples, not a closed
   vocabulary.
+- The skill said the plugin applies two transition ids; `/jira:comment` has
+  applied three since 1.7.0, counting `resolve` on explicit request. The count
+  is now right.
+- Test fixtures use identifiers with no counterpart in any real instance.
 
 ### Fixed
 
@@ -39,9 +44,10 @@ Versions before 1.7.1 are documented by their annotated git tags
 ### Added
 
 - Credentials are read from `~/.claude/custom/jira.env` first, with
-  `${CLAUDE_PLUGIN_ROOT}/.env` kept as a fallback, so a version bump no longer
-  leaves the secrets file behind in the previous cache directory. Nothing to
-  migrate: an existing `.env` in the plugin root keeps working.
+  `${CLAUDE_PLUGIN_ROOT}/.env` kept as a fallback. Move your secrets file there
+  once and no version bump touches it again. An existing `.env` in the plugin
+  root keeps working, but it lives inside the versioned plugin directory, so the
+  next bump leaves it behind.
 - Optional house rules file at `~/.claude/custom/jira.rules.md`. When it exists
   the bootstrap exports its path as `JIRA_RULES_FILE`; when it does not, the
   variable is cleared, so a stale value inherited from the environment cannot
@@ -59,6 +65,11 @@ Versions before 1.7.1 are documented by their annotated git tags
   working Basic header. The secrets file is the only source.
 - Skill, editing and deleting a comment, with the warning that deletion has no
   undo.
+- Skill and `/jira:comment`, the relay-bot shape: when a bot on the ticket
+  forwards everything below its own mention, the customer-facing answer is a
+  comment of its own holding only the panel, with the mention alone on the
+  panel's first line, and the technical part is a separate comment posted first.
+  Which label triggers it and which account the bot is are policy.
 
 ### Changed
 

@@ -196,8 +196,9 @@ task reads like, is policy. The rules file decides; this skill states no default
 
 ### Transitions come from the overlay, and the destination must be on the board
 
-The plugin applies two transition ids and no other: `start_progress` (when the
-ticket is still at Open) and `triage.target_transition`. Other ids in the overlay
+The plugin applies three transition ids and no other: `start_progress` (when the
+ticket is still at Open), `triage.target_transition`, and `resolve`, this last one
+only when the user asked for it in the conversation. Other ids in the overlay
 are documentation. Before moving, `/jira:comment` reads the board configuration
 (`GET /rest/agile/1.0/board/{id}/configuration`) and refuses a destination status
 that no column maps: such a ticket keeps its sprint but disappears from the board.

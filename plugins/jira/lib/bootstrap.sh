@@ -17,6 +17,8 @@
 #   JIRA_PYTHON          — Python interpreter verified to have PyYAML
 #   JIRA_CURL_CONFIG     — path to a 600-perm file with the Authorization
 #                          header, pass to curl via `--config "$JIRA_CURL_CONFIG"`
+#   JIRA_RULES_FILE      — path to ~/.claude/custom/jira.rules.md, exported only
+#                          when that file exists (team policy, optional)
 #
 # On missing/invalid config, prints the exact paths and keys involved and
 # exits with status 2.
@@ -43,8 +45,10 @@ plugin_root="$CLAUDE_PLUGIN_ROOT"
 plugin_name="jira"
 # Secrets live outside the versioned cache so a version bump never orphans them:
 # ~/.claude/custom/jira.env first, the plugin root .env as the legacy fallback.
-env_file="${HOME}/.claude/custom/${plugin_name}.env"
-[[ -f "$env_file" ]] || env_file="$plugin_root/.env"
+env_file_custom="${HOME}/.claude/custom/${plugin_name}.env"
+env_file_legacy="$plugin_root/.env"
+env_file="$env_file_custom"
+[[ -f "$env_file" ]] || env_file="$env_file_legacy"
 rules_file="${HOME}/.claude/custom/${plugin_name}.rules.md"
 env_example="$plugin_root/.env.example"
 overlay_file="${HOME}/.claude/custom/${plugin_name}.yaml"
@@ -71,13 +75,22 @@ fi
 # 2. The secrets file must exist (custom path first, plugin root as fallback).
 # ---------------------------------------------------------------------------
 if [[ ! -f "$env_file" ]]; then
-  die "missing secrets file: $env_file
-  Create it by copying the example:
-    cp '$env_example' '$env_file'
+  die "missing secrets file. Looked for, in order:
+    $env_file_custom (preferred, survives a version bump)
+    $env_file_legacy (legacy, inside the versioned plugin directory)
+  Create the preferred one by copying the example:
+    mkdir -p '${HOME}/.claude/custom'
+    cp '$env_example' '$env_file_custom'
   Then fill in the required values."
 fi
-# House rules (team policy on top of the mechanics) are optional and live with the overlay.
-if [[ -f "$rules_file" ]]; then export JIRA_RULES_FILE="$rules_file"; fi
+# House rules (team policy on top of the mechanics) are optional and live with the
+# overlay. Always assign, so a stale value inherited from the environment cannot
+# point a command at a file this plugin never validated.
+if [[ -f "$rules_file" ]]; then
+  export JIRA_RULES_FILE="$rules_file"
+else
+  unset JIRA_RULES_FILE
+fi
 
 # ---------------------------------------------------------------------------
 # 3. Required vars = lines in .env.example with an empty value. Lines of the

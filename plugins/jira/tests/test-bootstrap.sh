@@ -236,6 +236,97 @@ else
 fi
 rm -rf "$root" "$home"
 
+# Case 10 — ~/.claude/custom/jira.env wins over the plugin root .env. The
+# legacy file carries REAL_BASE (make_plugin_root writes it), so reading the
+# custom base back proves the order, not just that some file was found.
+root=$(make_plugin_root)
+home=$(make_home_with_overlay)
+CUSTOM_BASE="https://custom.example.atlassian.net"
+cat > "$home/.claude/custom/jira.env" <<EOF
+JIRA_BASE_URL=$CUSTOM_BASE
+JIRA_EMAIL=$REAL_EMAIL
+JIRA_API_TOKEN=$REAL_TOKEN
+EOF
+chmod 600 "$home/.claude/custom/jira.env"
+total=$((total + 1))
+got=$(
+  CLAUDE_PLUGIN_ROOT="$root" HOME="$home" bash -c '
+    source "$1/lib/bootstrap.sh"
+    printf "%s" "$JIRA_BASE_URL"
+    rm -f "$JIRA_CURL_CONFIG"
+  ' _ "$root" 2>/dev/null
+)
+if [[ "$got" == "$CUSTOM_BASE" ]]; then
+  printf "  PASS  custom jira.env wins over the plugin root .env\n"
+else
+  failures=$((failures + 1))
+  printf "  FAIL  custom jira.env wins over the plugin root .env\n"
+  printf "        expected %s, got: %s\n" "$CUSTOM_BASE" "$got"
+fi
+rm -rf "$root" "$home"
+
+# Case 11 — with no custom jira.env, the plugin root .env still loads. Same
+# assertion from the other side: installs from before 1.7.1 keep working.
+root=$(make_plugin_root)
+home=$(make_home_with_overlay)
+total=$((total + 1))
+got=$(
+  CLAUDE_PLUGIN_ROOT="$root" HOME="$home" bash -c '
+    source "$1/lib/bootstrap.sh"
+    printf "%s" "$JIRA_BASE_URL"
+    rm -f "$JIRA_CURL_CONFIG"
+  ' _ "$root" 2>/dev/null
+)
+if [[ "$got" == "$REAL_BASE" ]]; then
+  printf "  PASS  legacy plugin root .env still loads when custom is absent\n"
+else
+  failures=$((failures + 1))
+  printf "  FAIL  legacy plugin root .env still loads when custom is absent\n"
+  printf "        expected %s, got: %s\n" "$REAL_BASE" "$got"
+fi
+rm -rf "$root" "$home"
+
+# Case 12 — JIRA_RULES_FILE points at the rules file when it exists, and is
+# cleared when it does not, even if the environment already carried a value.
+root=$(make_plugin_root)
+home=$(make_home_with_overlay)
+printf '# rules\n' > "$home/.claude/custom/jira.rules.md"
+total=$((total + 1))
+got=$(
+  CLAUDE_PLUGIN_ROOT="$root" HOME="$home" bash -c '
+    source "$1/lib/bootstrap.sh"
+    printf "%s" "${JIRA_RULES_FILE:-}"
+    rm -f "$JIRA_CURL_CONFIG"
+  ' _ "$root" 2>/dev/null
+)
+if [[ "$got" == "$home/.claude/custom/jira.rules.md" ]]; then
+  printf "  PASS  JIRA_RULES_FILE exported when the rules file exists\n"
+else
+  failures=$((failures + 1))
+  printf "  FAIL  JIRA_RULES_FILE exported when the rules file exists\n"
+  printf "        expected %s, got: %s\n" "$home/.claude/custom/jira.rules.md" "$got"
+fi
+rm -rf "$root" "$home"
+
+root=$(make_plugin_root)
+home=$(make_home_with_overlay)
+total=$((total + 1))
+got=$(
+  CLAUDE_PLUGIN_ROOT="$root" HOME="$home" JIRA_RULES_FILE="/tmp/stale-rules.md" bash -c '
+    source "$1/lib/bootstrap.sh"
+    printf "%s" "${JIRA_RULES_FILE:-unset}"
+    rm -f "$JIRA_CURL_CONFIG"
+  ' _ "$root" 2>/dev/null
+)
+if [[ "$got" == "unset" ]]; then
+  printf "  PASS  a stale JIRA_RULES_FILE from the environment is cleared\n"
+else
+  failures=$((failures + 1))
+  printf "  FAIL  a stale JIRA_RULES_FILE from the environment is cleared\n"
+  printf "        expected unset, got: %s\n" "$got"
+fi
+rm -rf "$root" "$home"
+
 echo
 if (( failures > 0 )); then
   printf "FAILED: %d / %d\n" "$failures" "$total"

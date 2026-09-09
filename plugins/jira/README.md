@@ -49,16 +49,24 @@ approaches that look like they should work and don't.
 
 ## Setup
 
-One-time setup has two pieces: secrets (plugin `.env`) and user overlay
-(`~/.claude/custom/jira.yaml`).
+One-time setup has two required pieces, secrets
+(`~/.claude/custom/jira.env`) and user overlay
+(`~/.claude/custom/jira.yaml`), plus an optional third one, house rules
+(`~/.claude/custom/jira.rules.md`). All three live outside the plugin
+directory, so a version bump never leaves them behind.
 
-### 1. Secrets (plugin `.env`)
+### 1. Secrets (`~/.claude/custom/jira.env`)
 
 ```bash
-cd "${CLAUDE_PLUGIN_ROOT}"          # the jira plugin dir
-cp .env.example .env
-# Open .env and fill in the required values.
+mkdir -p ~/.claude/custom
+cp "${CLAUDE_PLUGIN_ROOT}/.env.example" ~/.claude/custom/jira.env
+chmod 600 ~/.claude/custom/jira.env
+# Open the file and fill in the required values.
 ```
+
+`${CLAUDE_PLUGIN_ROOT}/.env` is still read when `~/.claude/custom/jira.env`
+is absent, which keeps installs from before 1.7.1 working. It sits inside the
+versioned plugin directory, so it has to be copied by hand on every upgrade.
 
 Required variables:
 
@@ -91,20 +99,32 @@ The example file documents every required key. The critical ones:
   `"[{space}] {title}"`.
 - `triage.categories` — classification tags used by `/jira:routine`.
 
-### 3. Verify
+### 3. House rules (`~/.claude/custom/jira.rules.md`, optional)
+
+Team policy that sits on top of the mechanics, which status a ticket ends in,
+how a customer-facing answer is split, who owns a derived issue, does not
+belong in a versioned plugin. Write it in that file and the bootstrap exports
+the path as `JIRA_RULES_FILE`; the `jira-context` skill reads it right after
+the bootstrap and follows it over any default the skill documents. When the
+file is absent, `JIRA_RULES_FILE` is unset and the documented defaults apply.
+
+### 4. Verify
 
 Trigger any command; the bootstrap validates both files and aborts with a
 clear message if anything is missing.
 
 ## How it finds things
 
-The plugin never searches for config in alternate locations. Exactly:
+The plugin reads config from fixed paths, never from a search. Exactly:
 
-- **Secrets:** `${CLAUDE_PLUGIN_ROOT}/.env` (the installed plugin directory).
+- **Secrets:** `~/.claude/custom/jira.env`, and `${CLAUDE_PLUGIN_ROOT}/.env`
+  when the first one is absent. Those two, in that order, and nowhere else.
 - **Overlay:** `~/.claude/custom/jira.yaml`.
+- **House rules:** `~/.claude/custom/jira.rules.md`, optional, exported as
+  `JIRA_RULES_FILE` when present.
 
-If either is missing or incomplete, the bootstrap aborts. There is no
-fallback.
+If the secrets file or the overlay is missing or incomplete, the bootstrap
+aborts and names the paths it looked at.
 
 ## Dependencies
 

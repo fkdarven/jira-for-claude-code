@@ -42,11 +42,11 @@ projects:
 transitions:
   SUPPORT:
     start_progress: 4         # Open -> In Progress
-    staging: 741              # In Progress -> Staging (QA)
+    staging: 11               # In Progress -> Staging (QA)
     resolve: 5                # -> Resolved
-    block: 781                # -> Blocked
-    mr_created: 711           # -> MR
-    stop_progress: 301        # In Progress -> Open
+    block: 21                 # -> Blocked
+    mr_created: 31            # -> MR
+    stop_progress: 41         # In Progress -> Open
 
 # -----------------------------------------------------------------------------
 # Known accounts — used when assigning tickets by name instead of ID.

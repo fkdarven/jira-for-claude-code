@@ -31,6 +31,10 @@ reference and the overlay-reading pattern.
 | (empty)                                                                | List your open tickets in the configured source project via JQL: `project = <support_key> AND assignee = currentUser() AND statusCategory != Done ORDER BY status ASC, priority DESC, created DESC` |
 | anything else                                                          | Interpret as intent; if ambiguous, ask one clarifying question |
 
+The keyword lists are examples, not a closed vocabulary: the Portuguese terms
+sit beside the English ones because the router matches intent, not a fixed
+dictionary. Add the words your team actually types.
+
 ## Resolving "the source project"
 
 Read the overlay once:

@@ -37,7 +37,7 @@ echo "blank line kept"
 ```
 
 [[SUCCESS]]
-**Resposta ao cliente**
+**Aviso ao cliente**
 
 Texto para o cliente.
 

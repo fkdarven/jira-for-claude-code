@@ -46,11 +46,11 @@ projects:
 transitions:
   SUP:
     start_progress: 4
-    staging: 741
+    staging: 11
     resolve: 5
-    block: 781
-    mr_created: 711
-    stop_progress: 301
+    block: 21
+    mr_created: 31
+    stop_progress: 41
 accounts:
   - name: "Reviewer"
     email: "reviewer@example.com"

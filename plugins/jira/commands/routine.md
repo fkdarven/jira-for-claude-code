@@ -12,6 +12,9 @@ trap 'rm -f "$JIRA_CURL_CONFIG"' EXIT
 
 If the bootstrap fails, surface its error verbatim and stop.
 
+When `JIRA_RULES_FILE` is set, read that file before any comment, link or
+transition, and follow it over any default this command describes.
+
 ## Flow
 
 ### 1. Resolve the source project and relevant transition IDs
@@ -100,8 +103,8 @@ curl --config "$JIRA_CURL_CONFIG" -X POST \
 
 Include: what was done, root cause, commands executed (with secrets redacted),
 and any pending items. The part meant for the customer goes inside a
-`[[SUCCESS]] … [[/PANEL]]` block (green panel) that opens with a bold
-"Resposta ao cliente" paragraph, in customer language. `/jira:comment` wraps this
+`[[SUCCESS]] … [[/PANEL]]` block (green panel), in customer language; how that
+panel opens is policy and comes from the rules file. `/jira:comment` wraps this
 step with the duplicate check and the issue-link step; prefer it when closing a
 single ticket. See `jira-context/SKILL.md` for the converter's input subset.
 
@@ -110,10 +113,10 @@ Every key the comment mentions ships twice: as a link to
 ticket. Bold text is not a reference — whoever reads the comment has to be one
 click away from what it spun off.
 
-When the investigation ends without a task — nothing reproduced, or the finding
-is still a hypothesis — record the outcome in one line ("not reproduced on
-<env>, no task opened") and stop there. Do not argue the decision inside the
-ticket: the reader wants the state, not a rationale for the process.
+When the investigation ends without a task, nothing reproduced or the finding
+still a hypothesis, record the outcome and stop there. How short that record is,
+and whether the reasoning behind it belongs in the ticket, is policy and comes
+from the rules file.
 
 #### d) Transition the ticket
 

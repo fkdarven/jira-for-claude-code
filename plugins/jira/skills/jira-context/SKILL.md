@@ -23,6 +23,7 @@ After it returns successfully, the following variables are in scope:
 | `JIRA_OVERLAY_FILE` | bootstrap-exported path      | Path to the user overlay YAML. |
 | `JIRA_PYTHON`       | bootstrap-detected           | Python interpreter verified to have PyYAML. |
 | `JIRA_CURL_CONFIG`  | bootstrap-exported path      | 600-perm file containing the Authorization header. Pass to curl via `--config "$JIRA_CURL_CONFIG"`. |
+| `JIRA_RULES_FILE`   | bootstrap-exported path      | Team policy file, exported only when `~/.claude/custom/jira.rules.md` exists. Unset when it does not. |
 
 Never hardcode a project key, transition ID, account ID, custom field ID,
 or link type in a command. Read it from the overlay.
@@ -164,9 +165,10 @@ Subset: paragraphs, `- ` bullets, `1. ` ordered lists, `#` headings, fenced code
 (also INFO, NOTE, WARNING, ERROR). Every bare key of a `--projects` project
 becomes a link to `$JIRA_BASE_URL/browse/<KEY>` on its own; `[**KEY**](url)`
 composes bold with the link. The green `success` panel is where the
-customer-facing answer lives, opening with a bold "Resposta ao cliente"
-paragraph. `--keys` feeds the issue-link step: a key a comment cites is also
-linked for real.
+customer-facing part of a comment goes; whether it opens with a label
+paragraph, and in which words, is policy and comes from the rules file.
+`--keys` feeds the issue-link step: a key a comment cites is also linked for
+real.
 
 ### A relay bot in the panel: two comments, mention on the first line
 
@@ -182,16 +184,15 @@ a panel-only body: look at the ticket before the second post.
 Which label triggers this, and which account the bot is, are policy. They live in the
 rules file, not here.
 
-### Consolidating: one comment survives, the others are saved and then deleted
+### Editing and deleting a comment
 
-Commenting in steps while an investigation runs is fine. When it ends, the ticket keeps
-one consolidated comment, opening by saying it replaces the earlier ones and where the
-history lives. Edit a posted comment with `PUT /rest/api/3/issue/{key}/comment/{id}`
-(same shape as the POST). Delete with `DELETE /rest/api/3/issue/{key}/comment/{id}`;
-there is no undo, so save every original body to a file first and post the consolidated
-comment before deleting the old ones. Keep the corrected result, drop the narrative of
-how the correction happened. A closure without a task is one line; never argue the
-decision inside the ticket.
+A ticket commented in steps can be consolidated afterwards. Edit a posted comment with
+`PUT /rest/api/3/issue/{key}/comment/{id}` (same shape as the POST). Delete with
+`DELETE /rest/api/3/issue/{key}/comment/{id}`; there is no undo, so save every original
+body to a file first and post the replacement before removing anything.
+
+Whether a ticket ends with a single consolidated comment, and what a closure without a
+task reads like, is policy. The rules file decides; this skill states no default.
 
 ### Transitions come from the overlay, and the destination must be on the board
 

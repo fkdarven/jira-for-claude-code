@@ -12,6 +12,9 @@ trap 'rm -f "$JIRA_CURL_CONFIG"' EXIT
 
 If the bootstrap fails, surface its error verbatim and stop.
 
+When `JIRA_RULES_FILE` is set, read that file before any comment, link or
+transition, and follow it over any default this command describes.
+
 ## Argument
 
 `$ARGUMENTS`
@@ -134,7 +137,7 @@ curl --config "$JIRA_CURL_CONFIG" -X POST \
 Print the created key as a browse URL, the epic it hangs from with its summary, and whether a body was sent. Then stop: nothing here moves a board.
 
 ```
-PUBLISHER-190  https://your.atlassian.net/browse/PUBLISHER-190
-epic           PUBLISHER-125 (3.10.0)
+ROADMAP-190    https://your.atlassian.net/browse/ROADMAP-190
+epic           ROADMAP-125 (3.10.0)
 description    sent (panel + 5 sections)
 ```

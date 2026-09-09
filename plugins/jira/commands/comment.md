@@ -1,6 +1,6 @@
 ---
 command: comment
-description: Post the single consolidated comment on a ticket, link every key it cites, and (optionally) move the ticket through the overlay's target transition
+description: Post a consolidated comment on a ticket, link every key it cites, and (optionally) move the ticket through the overlay's target transition
 ---
 
 ## Bootstrap (required first step)
@@ -11,6 +11,9 @@ trap 'rm -f "$JIRA_CURL_CONFIG"' EXIT
 ```
 
 If the bootstrap fails, surface its error verbatim and stop.
+
+When `JIRA_RULES_FILE` is set, read that file before any comment, link or
+transition, and follow it over any default this command describes.
 
 ## Argument
 
@@ -29,9 +32,9 @@ Shape: `<KEY> <path-to-body.md> [staging|close|done|resolve] [force]`
   at Open).
 - `resolve`: after commenting, apply the overlay's `transitions.<PROJECT>.resolve`
   (with `start_progress` first when the ticket is still at Open). Only when the
-  user said, in this conversation, to resolve this ticket: the default end of a
-  ticket is the staging transition, and a fix that is merged but not deployed
-  never goes to Resolved. Never infer it from the body of the comment.
+  user said, in this conversation, to resolve this ticket, and only when the rules
+  file does not reserve that ending for something narrower. Never infer it from the
+  body of the comment.
 - When the rules file puts a relay bot on the ticket, run the command twice: first the
   technical body, then a body that is only the `[[SUCCESS]]` panel, with the bot mention
   alone on its first line and no label paragraph (see the skill). The duplicate check
@@ -41,10 +44,11 @@ Shape: `<KEY> <path-to-body.md> [staging|close|done|resolve] [force]`
 
 ## Why this command exists
 
-A ticket ends with **one** consolidated comment, and the transition that follows
-comes from the overlay, not from a transition id picked by hand. Both rules were
-being re-implemented in ad-hoc scripts, and one of those scripts moved a ticket
-into a status the board has no column for, so the card vanished from the sprint.
+The transition that follows a comment comes from the overlay, not from a
+transition id picked by hand, and the destination is checked against the board
+first. That rule was being re-implemented in ad-hoc scripts, and one of those
+scripts moved a ticket into a status the board has no column for, so the card
+vanished from the sprint.
 This command is the only path for "comment and move".
 
 ## Flow

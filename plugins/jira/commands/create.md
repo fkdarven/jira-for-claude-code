@@ -12,6 +12,9 @@ trap 'rm -f "$JIRA_CURL_CONFIG"' EXIT
 
 If the bootstrap fails, surface its error verbatim and stop.
 
+When `JIRA_RULES_FILE` is set, read that file before any comment, link or
+transition, and follow it over any default this command describes.
+
 ## Argument
 
 `$ARGUMENTS`
@@ -181,8 +184,8 @@ curl -s --config "$JIRA_CURL_CONFIG" \
              else "\(.type.inward) \(.inwardIssue.key)" end'
 ```
 
-Each line is the sentence the task's own page shows. `implements PUBLISHER-186`
-is right. `is implemented by PUBLISHER-186` means the payload went out reversed:
+Each line is the sentence the task's own page shows. `implements ROADMAP-186`
+is right. `is implemented by ROADMAP-186` means the payload went out reversed:
 delete it (`DELETE /rest/api/3/issueLink/{id}`, the id comes from the same
 `issuelinks` array) and post it again with the keys the correct way round.
 
